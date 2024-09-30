@@ -7,9 +7,9 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/noetipo/DAD-2024-2.git # ruta del repositorio git
+          uri: https://github.com/danielccanayucra/DAD.2024.DANIEL.git # ruta del repositorio git
           searchPaths: config-data
-          default-label: registry-server
+          default-label: main
   security:
     user:
       name: root

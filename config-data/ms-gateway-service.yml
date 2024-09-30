@@ -19,3 +19,8 @@ spring:
           uri: lb://ms-catalogo-service
           predicates:
             - Path=/category/**
+        - id: ms-pedido-service
+          uri: lb://ms-pedido-service
+          predicates:
+            - Path=/order/**
+
