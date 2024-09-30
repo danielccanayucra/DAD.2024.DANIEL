@@ -4,7 +4,4 @@ spring:
   profiles:
     active: development
   config:
-    import: optional:configserver:http://root:s3cr3t@localhost:7070
-
-jwt:
-  secret: secret
+    import: optional:configserver:http://root:123456@localhost:7070

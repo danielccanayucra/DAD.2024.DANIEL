@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+
 @Component
 public class JwtProvider    {
     @Value("${jwt.secret}")
@@ -60,4 +61,3 @@ public class JwtProvider    {
         }
     }
 }
-
