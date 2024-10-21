@@ -7,7 +7,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/danielccanayucra/DAD.2024.DANIEL.git # ruta del repositorio git
+          uri: https://github.com/danielccanayucra/Proyecto-Integrador-2024-2-DAD.git # ruta del repositorio git
           searchPaths: config-data
           default-label: segurity
   security:
