@@ -25,13 +25,13 @@ public class InventoryServiceImpl implements InventoryService {
     }
 
     @Override
-    public Inventory save(Inventory category) {
-        return inventoryRepository.save(category);
+    public Inventory save(Inventory inventory) {
+        return inventoryRepository.save(inventory);
     }
 
     @Override
-    public Inventory update(Inventory category) {
-        return inventoryRepository.save(category);
+    public Inventory update(Inventory inventory) {
+        return inventoryRepository.save(inventory);
     }
 
     @Override

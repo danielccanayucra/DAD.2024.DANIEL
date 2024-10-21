@@ -9,7 +9,7 @@ spring:
     show-sql: true
 
   datasource:
-    url: jdbc:mysql://localhost:3306/ms_catalogo
+    url: jdbc:mysql://localhost:3306/ms_inventario
     username: root
     password: ""
     driver-class-name: com.mysql.cj.jdbc.Driver

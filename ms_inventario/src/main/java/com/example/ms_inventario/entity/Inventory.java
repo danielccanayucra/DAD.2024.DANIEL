@@ -12,7 +12,8 @@ public class Inventory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private String productName;
-    private Integer  stockQuantity;
+    private String name;
+    private String description;
+    private String code;
 }
 
