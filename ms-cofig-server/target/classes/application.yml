@@ -1,5 +1,5 @@
 server:
-  port: 7070
+  port: 7080
 spring:
   application:
     name: config-server
@@ -9,7 +9,7 @@ spring:
         git:
           uri: https://github.com/danielccanayucra/Proyecto-Integrador-2024-2-DAD.git # ruta del repositorio git
           searchPaths: config-data
-          default-label: main
+          default-label: segurity
   security:
     user:
       name: root
