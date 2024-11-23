@@ -44,7 +44,4 @@ resilience4j.circuitbreaker:
       minimumNumberOfCalls: 4
       waitDurationInOpenState: 5s
 
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes

@@ -24,12 +24,11 @@ springdoc:
 eureka:
   client:
     serviceUrl:
-<<<<<<< Updated upstream
-      defaultZone: http://localhost:8091/eureka
-=======
+
+
       #defaultZone: http://localhost:8090/eureka
-      defaultZone: ${EUREKA_URI:http://localhost:8090/eureka}
->>>>>>> Stashed changes
+      defaultZone: ${EUREKA_URI:http://localhost:8091/eureka}
+
   instance:
     #hostname: localhost
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}

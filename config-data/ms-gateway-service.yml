@@ -3,12 +3,8 @@ server:
 eureka:
   client:
     serviceUrl:
-<<<<<<< Updated upstream
-      defaultZone: http://localhost:8091/eureka
-=======
       #defaultZone: http://localhost:8090/eureka
-      defaultZone: ${EUREKA_URI:http://localhost:8090/eureka}
->>>>>>> Stashed changes
+      defaultZone: ${EUREKA_URI:http://localhost:8091/eureka}
   instance:
     hostname: localhost
 
@@ -33,7 +29,6 @@ spring:
         - id: ms-catalogo-service
           uri: lb://ms-catalogo-service
           predicates:
-<<<<<<< Updated upstream
             - Path=/category/**, /producto/**
           filters:
             - AuthFilter
@@ -47,9 +42,7 @@ spring:
           uri: lb://ms-pedido-service
           predicates:
             - Path=/order/**
-=======
             - Path=/category/**
->>>>>>> Stashed changes
           filters:
             - AuthFilter
         - id: ms-auth-service
