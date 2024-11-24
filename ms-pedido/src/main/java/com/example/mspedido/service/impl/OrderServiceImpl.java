@@ -169,38 +169,32 @@ public class OrderServiceImpl implements OrderService {
             throw new ResourceNotFoundException("Cliente no encontrado con ID: " + order.getClientId());
         }
 
-        // Validar que el pedido existe antes de actualizarlo
-        Optional<Order> existingOrderOpt = orderRepository.findById(order.getId());
-        if (existingOrderOpt.isEmpty()) {
+        // Obtener el pedido original desde el repositorio para capturar las cantidades originales
+        Optional<Order> optionalExistingOrder = orderRepository.findById(order.getId());
+        if (optionalExistingOrder.isEmpty()) {
             throw new ResourceNotFoundException("Pedido no encontrado con ID: " + order.getId());
         }
 
-        // Recuperar el pedido existente
-        Order existingOrder = existingOrderOpt.get();
+        Order existingOrder = optionalExistingOrder.get(); // Pedido original
+        log.info("Pedido original recuperado para ID {}: {}", order.getId(), existingOrder);
+        log.info("Pedido original recuperado para ID {}: {}", order.getId(), optionalExistingOrder);
 
-        // Restaurar el stock de los productos involucrados en el pedido original
+
+// Iterar sobre los detalles originales para restaurar el stock
         for (OrderDetail existingDetail : existingOrder.getOrderDetails()) {
             // Obtener el producto desde el microservicio de productos
-            Optional<Order> optionalExistingOrder = orderRepository.findById(order.getId());
-            if (optionalExistingOrder.isEmpty()) {
-                throw new ResourceNotFoundException("Pedido no encontrado con ID: " + order.getId());
-            }
-            Order existingOrder = optionalExistingOrder.get();
-
-            Integer originalStock = productDto.getStock();
-            Integer originalQuantity = existingDetail.getQuantity();
-            log.info("Stock original para el producto con ID {}: {}", existingDetail.getProductId(), originalStock);
-            log.info("Stock original para el producto con ID {}: {}", existingDetail.getProductId(), originalQuantity);
-
-            if (originalStock < existingDetail.getQuantity()) {
-                throw new RuntimeException("Stock insuficiente para el producto con ID: " + existingDetail.getProductId());
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(existingDetail.getProductId());
+            if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
+                throw new RuntimeException("Producto no encontrado con ID: " + existingDetail.getProductId());
             }
 
-            // Restaurar el stock sumando la cantidad del pedido original
-            productFeign.incrementarStock(existingDetail.getProductId(), originalQuantity);
+            ProductDto productDto = productResponse.getBody();
+
+            // Restaurar el stock usando la cantidad original del pedido
+            productFeign.incrementarStock(existingDetail.getProductId(), existingDetail.getQuantity());
             log.info("Stock restaurado para el producto con ID: {}, cantidad restaurada: {}", existingDetail.getProductId(), existingDetail.getQuantity());
 
-            // Obtener el stock actualizado después de la restauración
+            // Opcional: verificar el stock después de la restauración
             ResponseEntity<ProductDto> updatedProductResponse = productFeign.getById(existingDetail.getProductId());
             if (updatedProductResponse.getStatusCode().is2xxSuccessful() && updatedProductResponse.getBody() != null) {
                 Integer currentStockAfterRestoration = updatedProductResponse.getBody().getStock();
