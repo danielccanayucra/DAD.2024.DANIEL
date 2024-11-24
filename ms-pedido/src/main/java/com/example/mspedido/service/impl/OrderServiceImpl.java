@@ -170,55 +170,120 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // Validar que el pedido existe antes de actualizarlo
-        Optional<Order> existingOrder = orderRepository.findById(order.getId());
-        if (existingOrder.isEmpty()) {
+        Optional<Order> existingOrderOpt = orderRepository.findById(order.getId());
+        if (existingOrderOpt.isEmpty()) {
             throw new ResourceNotFoundException("Pedido no encontrado con ID: " + order.getId());
         }
 
-        // Actualizar el pedido
-        Order updatedOrder = existingOrder.get();
-        updatedOrder.setClientId(order.getClientId());
-        updatedOrder.setNumber(order.getNumber());
+        // Recuperar el pedido existente
+        Order existingOrder = existingOrderOpt.get();
 
-        if (order.getStatus() != null) {
-            updatedOrder.setStatus(order.getStatus());
-        } else {
-            updatedOrder.setStatus("PENDING");
-        }
+        // Restaurar el stock de los productos involucrados en el pedido original
+        for (OrderDetail existingDetail : existingOrder.getOrderDetails()) {
+            // Obtener el producto desde el microservicio de productos
+            Optional<Order> optionalExistingOrder = orderRepository.findById(order.getId());
+            if (optionalExistingOrder.isEmpty()) {
+                throw new ResourceNotFoundException("Pedido no encontrado con ID: " + order.getId());
+            }
+            Order existingOrder = optionalExistingOrder.get();
 
-        updatedOrder.setTotalPrice(order.getTotalPrice());
-        updatedOrder.setOrderDetails(order.getOrderDetails());
+            Integer originalStock = productDto.getStock();
+            Integer originalQuantity = existingDetail.getQuantity();
+            log.info("Stock original para el producto con ID {}: {}", existingDetail.getProductId(), originalStock);
+            log.info("Stock original para el producto con ID {}: {}", existingDetail.getProductId(), originalQuantity);
 
-        // Enriquecer con información del cliente (opcional)
-        updatedOrder.setClientDto(response.getBody());
+            if (originalStock < existingDetail.getQuantity()) {
+                throw new RuntimeException("Stock insuficiente para el producto con ID: " + existingDetail.getProductId());
+            }
 
-        // Obtener los detalles del producto para cada OrderDetail
-        Double totalPrice = 0.0; // Variable para acumular el total del pedido
+            // Restaurar el stock sumando la cantidad del pedido original
+            productFeign.incrementarStock(existingDetail.getProductId(), originalQuantity);
+            log.info("Stock restaurado para el producto con ID: {}, cantidad restaurada: {}", existingDetail.getProductId(), existingDetail.getQuantity());
 
-
-        for (OrderDetail orderDetail : updatedOrder.getOrderDetails()) {
-            Integer productId = orderDetail.getProductId();
-            ResponseEntity<ProductDto> productResponse = productFeign.getById(productId);
-
-            if (productResponse.getStatusCode().is2xxSuccessful() && productResponse.getBody() != null) {
-                ProductDto productDto = productResponse.getBody();
-                orderDetail.setProductDto(productDto);  // Asignar el ProductDto completo al detalle
-
-                // Asignar el precio del producto al detalle del pedido
-                orderDetail.setPrice(productDto.getPrecio());
-                orderDetail.calculateAmount();// Calcular el monto basado en el precio y cantidad
-                totalPrice += orderDetail.getAmount();
+            // Obtener el stock actualizado después de la restauración
+            ResponseEntity<ProductDto> updatedProductResponse = productFeign.getById(existingDetail.getProductId());
+            if (updatedProductResponse.getStatusCode().is2xxSuccessful() && updatedProductResponse.getBody() != null) {
+                Integer currentStockAfterRestoration = updatedProductResponse.getBody().getStock();
+                log.info("Stock actualizado después de restauración para el producto con ID {}: {}", existingDetail.getProductId(), currentStockAfterRestoration);
             } else {
-                throw new RuntimeException("Producto no encontrado con ID: " + productId);
+                log.warn("No se pudo obtener el stock actualizado después de restauración para el producto con ID: {}", existingDetail.getProductId());
             }
         }
 
-        updatedOrder.setTotalPrice(totalPrice); // Asignar el precio total del pedido
+
+        // Actualizar los datos del pedido
+        existingOrder.setClientId(order.getClientId());
+        existingOrder.setNumber(order.getNumber());
+        existingOrder.setStatus(order.getStatus() != null ? order.getStatus() : "PENDING");
+        existingOrder.setClientDto(response.getBody());
+
+        // Procesar y enriquecer los detalles del pedido actualizado
+        double totalPrice = 0.0;
+        for (OrderDetail detail : order.getOrderDetails()) {
+            // Obtener el producto desde el microservicio de productos
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(detail.getProductId());
+            if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
+                throw new RuntimeException("Producto no encontrado con ID: " + detail.getProductId());
+            }
+
+            ProductDto productDto = productResponse.getBody();
+
+            // Verificar que el stock sea suficiente para la nueva cantidad
+            if (productDto.getStock() < detail.getQuantity()) {
+                throw new RuntimeException("Stock insuficiente para el producto con ID: " + detail.getProductId());
+            }
+
+
+            // Establecer los detalles enriquecidos
+            detail.setPrice(productDto.getPrecio());
+            detail.setProductDto(productDto);
+            detail.calculateAmount();
+
+            totalPrice += detail.getAmount();
+
+            log.info("Producto asignado a OrderDetail: {}", productDto);
+        }
+
+
+        existingOrder.setOrderDetails(order.getOrderDetails());
+        existingOrder.setTotalPrice(totalPrice);
 
         // Guardar el pedido actualizado
-        updatedOrder = orderRepository.save(updatedOrder);
+        Order updatedOrder = orderRepository.save(existingOrder);
+
+        for (OrderDetail detailUpdate : order.getOrderDetails()) {
+            // Obtener el producto desde el microservicio de productos
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(detailUpdate.getProductId());
+            if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
+                throw new RuntimeException("Producto no encontrado con ID: " + detailUpdate.getProductId());
+            }
+
+            ProductDto productDto = productResponse.getBody();
+
+            // Verificar que el stock sea suficiente para la nueva cantidad
+            if (productDto.getStock() < detailUpdate.getQuantity()) {
+                throw new RuntimeException("Stock insuficiente para el producto con ID: " + detailUpdate.getProductId());
+            }
+
+            // Reducir el stock basado en la nueva cantidad
+            productFeign.reducirStock(detailUpdate.getProductId(), detailUpdate.getQuantity());
+            log.info("Stock reducido para el producto con ID: {}, cantidad reducida: {}", detailUpdate.getProductId(), detailUpdate.getQuantity());
+
+            // Obtener el stock actualizado después de la reducción
+            ResponseEntity<ProductDto> updatedProductResponse = productFeign.getById(detailUpdate.getProductId());
+            if (updatedProductResponse.getStatusCode().is2xxSuccessful() && updatedProductResponse.getBody() != null) {
+                Integer currentStock = updatedProductResponse.getBody().getStock();
+                log.info("Stock actual para el producto con ID {}: {}", detailUpdate.getProductId(), currentStock);
+            } else {
+                log.warn("No se pudo obtener el stock actualizado para el producto con ID: {}", detailUpdate.getProductId());
+            }
+
+
+            log.info("Producto asignado a OrderDetail: {}", productDto);
+        }
 
         return updatedOrder;
     }
+
 
 }

@@ -9,11 +9,14 @@ import com.example.mspedido.entity.OrderDetail;
 import com.example.mspedido.exception.ResourceNotFoundException;
 import com.example.mspedido.feign.ProductFeign;
 import com.example.mspedido.service.OrderService;
+import com.example.mspedido.service.impl.OrderServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +25,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/order")
 public class OrderController {
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
+
     @Autowired
     private OrderService orderService;
     @Autowired
@@ -60,6 +65,7 @@ public class OrderController {
 
         // Guardar el pedido
         Order savedOrder = orderService.save(order);
+        log.info("Producto  para OrderDetail: {}", orderDetails);
 
         // Mapear la entidad guardada al DTO de respuesta
         OrderResponseDTO responseDTO = new OrderResponseDTO();
@@ -86,52 +92,59 @@ public class OrderController {
 
     @PutMapping("/{id}")
     public ResponseEntity<OrderResponseDTO> update(@PathVariable Integer id, @RequestBody @Valid OrderRequestDTO orderRequestDTO) {
-        // Buscar el pedido existente
-        Optional<Order> existingOrder = orderService.findById(id);
-        if (!existingOrder.isPresent()) {
-            throw new ResourceNotFoundException("Pedido no encontrado con ID: " + id);
+        // Recuperar el pedido existente desde la base de datos
+        Optional<Order> optionalOrder = orderService.findById(id);
+        if (optionalOrder.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();  // Pedido no encontrado
         }
 
-        // Actualizar el pedido
-        Order order = existingOrder.get();
+        Order order = optionalOrder.get();  // Pedido existente
         order.setNumber(orderRequestDTO.getNumber());
         order.setClientId(orderRequestDTO.getClientId());
 
         // Actualizar los detalles del pedido
         List<OrderDetail> orderDetails = orderRequestDTO.getOrderDetails().stream().map(orderDetailRequest -> {
-            OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setProductId(orderDetailRequest.getProductId());
-            orderDetail.setQuantity(orderDetailRequest.getQuantity());
-
-            // Recuperar el producto usando productId y asignar el ProductDto
+            // Aquí se hace la consulta al servicio para obtener el producto
             ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetailRequest.getProductId());
             if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
                 throw new RuntimeException("Producto no encontrado con ID: " + orderDetailRequest.getProductId());
             }
-
             ProductDto productDto = productResponse.getBody();
+
+
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setProductId(orderDetailRequest.getProductId());
+            orderDetail.setQuantity(orderDetailRequest.getQuantity());
             orderDetail.setProductDto(productDto);
-            orderDetail.setPrice(productDto.getPrecio());
-            orderDetail.calculateAmount(); // Calcular amount
+
+
+             // Asignar el productDto
+            orderDetail.setPrice(productDto.getPrecio());  // Asignar el precio del producto
+            log.info("Producto  para order: {}", orderDetail);
 
             return orderDetail;
         }).collect(Collectors.toList());
-
+        log.info("Producto  para OrderDetails: {}", orderDetails);
         order.setOrderDetails(orderDetails);
 
-        // Actualizar totalPrice (basado en el precio de los detalles)
-        double totalPrice = orderDetails.stream().mapToDouble(OrderDetail::getAmount).sum();
-        order.setTotalPrice(totalPrice);
+        log.info("Producto obtenido para order: {}", order);
+        // Actualizar el pedido en la base de datos
+        Order updatedOrder = orderService.update(order);
 
-        // Guardar el pedido actualizado
-        Order updatedOrder = orderService.save(order);
+        for (OrderDetail orderDetail : updatedOrder.getOrderDetails()) {
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetail.getProductId());
+            if (productResponse.getStatusCode().is2xxSuccessful() && productResponse.getBody() != null) {
+                orderDetail.setProductDto(productResponse.getBody());
+            }
+        }
 
-        // Mapear la entidad actualizada al DTO de respuesta
+        // Mapear la entidad guardada al DTO de respuesta
         OrderResponseDTO responseDTO = new OrderResponseDTO();
         responseDTO.setId(updatedOrder.getId());
         responseDTO.setNumber(updatedOrder.getNumber());
         responseDTO.setClientId(updatedOrder.getClientId());
         responseDTO.setClientDto(updatedOrder.getClientDto());
+
         responseDTO.setOrderDetails(updatedOrder.getOrderDetails().stream().map(detail -> {
             OrderDetailResponseDTO detailDTO = new OrderDetailResponseDTO();
             detailDTO.setId(detail.getId());
@@ -139,12 +152,14 @@ public class OrderController {
             detailDTO.setQuantity(detail.getQuantity());
             detailDTO.setPrice(detail.getPrice());
             detailDTO.setAmount(detail.getAmount());
-            detailDTO.setProductDto(detail.getProductDto());  // Aquí se incluye el ProductDto con todos sus detalles
+            detailDTO.setProductDto(detail.getProductDto());  // Asegurarse de que el productDto no sea null
+
             return detailDTO;
+
         }).collect(Collectors.toList()));
+
         responseDTO.setTotalPrice(updatedOrder.getTotalPrice());
         responseDTO.setStatus(updatedOrder.getStatus());
-
         return ResponseEntity.ok(responseDTO);
     }
 

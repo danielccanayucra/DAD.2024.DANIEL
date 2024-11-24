@@ -13,6 +13,8 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String name;
+    private String apellido;
+    private String telefono;
     private String document;
 
 
