@@ -13,7 +13,7 @@ public class OrderDetail {
     private Double price;
     private Integer quantity;
     private Double amount;
-    private Integer ProductId;
+    private Integer productId;
     @Transient
     private ProductDto productDto;
     public OrderDetail() {

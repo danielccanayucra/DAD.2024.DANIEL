@@ -33,27 +33,40 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order save(Order order) {
-        // Validar si el cliente existe antes de guardar el pedido
-        ResponseEntity<ClientDto> response = clientFeign.getById(order.getClientId());
-        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+        // 1. Verificar que el cliente existe
+        ResponseEntity<ClientDto> clientResponse = clientFeign.getById(order.getClientId());
+        if (!clientResponse.getStatusCode().is2xxSuccessful() || clientResponse.getBody() == null) {
             throw new RuntimeException("Cliente no encontrado con ID: " + order.getClientId());
         }
+        order.setClientDto(clientResponse.getBody());
 
-        // Reducir el stock de cada producto incluido en el pedido
+        // 2. Verificar los productos y actualizar el inventario
+        Double totalPrice = 0.0;
         for (OrderDetail orderDetail : order.getOrderDetails()) {
-            ResponseEntity<ProductDto> productResponse = productFeign.reducirStock(
-                    orderDetail.getProductId(), orderDetail.getQuantity()
-            );
+            // Obtener el producto usando el productId
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetail.getProductId());
             if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
-                throw new RuntimeException("Error al reducir el stock del producto con ID: " + orderDetail.getProductId());
+                throw new RuntimeException("Producto no encontrado con ID: " + orderDetail.getProductId());
             }
+
+            // Verificar si hay suficiente stock
+            ProductDto productDto = productResponse.getBody();
+            if (productDto.getStock() < orderDetail.getQuantity()) {
+                throw new RuntimeException("Stock insuficiente para el producto: " + productDto.getName());
+            }
+
+            // Actualizar el precio en el detalle del pedido
+            orderDetail.setPrice(productDto.getPrecio());
+            totalPrice += productDto.getPrecio() * orderDetail.getQuantity();
+
+            // Reducir el stock del producto
+            productFeign.reducirStock(orderDetail.getProductId(), orderDetail.getQuantity());
         }
 
-        // Si el cliente existe, guardamos el pedido
+        // Registrar el pedido
+        order.setTotalPrice(totalPrice);  // Asignar el precio total del pedido
+        order.setStatus("PENDING");  // El pedido inicia como pendiente hasta que se realice el pago
         Order savedOrder = orderRepository.save(order);
-
-        // Enriquecer el pedido con información del cliente (opcional)
-        savedOrder.setClientDto(response.getBody());
 
         return savedOrder;
     }
@@ -63,22 +76,19 @@ public class OrderServiceImpl implements OrderService {
         Optional<Order> order = orderRepository.findById(id);
 
         if (order.isPresent()) {
-            // Llamar al servicio de clientes y setear el DTO del cliente
+            // Enriquecer con el cliente
             ResponseEntity<ClientDto> clientResponse = clientFeign.getById(order.get().getClientId());
             if (clientResponse.getStatusCode().is2xxSuccessful() && clientResponse.getBody() != null) {
                 order.get().setClientDto(clientResponse.getBody());
             }
 
-            // Llamar al servicio de productos y setear los DTOs en cada detalle del pedido
+            // Enriquecer los detalles con los productos
             order.get().getOrderDetails().forEach(orderDetail -> {
                 ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetail.getProductId());
                 if (productResponse.getStatusCode().is2xxSuccessful() && productResponse.getBody() != null) {
                     orderDetail.setProductDto(productResponse.getBody());
-                    orderDetail.calculateAmount();
                 }
             });
-        } else {
-            throw new RuntimeException("Pedido no encontrado con ID: " + id);
         }
 
         return order;

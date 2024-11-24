@@ -3,6 +3,7 @@ package com.example.mspedido.controller;
 import com.example.mspedido.entity.Order;
 import com.example.mspedido.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +28,12 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<Order> create(@RequestBody Order order) {
-        return ResponseEntity.ok(orderService.save(order));
+        try {
+            Order savedOrder = orderService.save(order);
+            return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping("/{id}")
