@@ -2,6 +2,7 @@ package com.example.mspedido.entity;
 
 import com.example.mspedido.dto.ProductDto;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Entity
@@ -10,20 +11,22 @@ public class OrderDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private Double price;
-    private Integer quantity;
-    private Double amount;
+
+    @NotNull
     private Integer productId;
+
+    @NotNull
+    private Integer quantity;
+
+    private Double price; // Calculado automáticamente
+    private Double amount; // Calculado automáticamente
+
     @Transient
-    private ProductDto productDto;
-    public OrderDetail() {
-        this.price = (double) 0;
-        this.quantity = 0;
-        this.amount = (double) 0;
-    }
-    // Método para calcular el amount basado en price y quantity
+    private ProductDto productDto; // No lo envías en la solicitud
+
     public void calculateAmount() {
         this.amount = this.price * this.quantity;
     }
 }
+
 

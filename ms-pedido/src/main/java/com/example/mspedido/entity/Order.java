@@ -3,6 +3,8 @@ package com.example.mspedido.entity;
 import com.example.mspedido.dto.ClientDto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
@@ -15,32 +17,21 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private String number;         // Número del pedido
-    private Integer clientId;      // ID del cliente
+    @NotNull
+    private String number;
 
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @NotNull
+    private Integer clientId;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "order_id")
-    private List<OrderDetail> orderDetails; // Detalles del pedido (productos)
+    @Valid
+    private List<OrderDetail> orderDetails;
 
     @Transient
-    private ClientDto clientDto; // Cliente asociado (DTO para cliente)
+    private ClientDto clientDto; // No lo envías en la solicitud
 
-    private Double totalPrice;  // Precio total del pedido
-    private String status;      // Estado del pedido (PENDING, PAID, etc.)
-
-    // Constructor por defecto
-    public Order() {
-        this.status = "PENDING";  // Por defecto, el estado es "PENDING"
-        this.totalPrice = 0.0;    // Precio total por defecto es 0
-    }
-
-    // Método para calcular el precio total
-    public void calculateTotalPrice() {
-        double total = 0.0;
-        for (OrderDetail orderDetail : orderDetails) {
-            total += orderDetail.getPrice() * orderDetail.getAmount();
-        }
-        this.totalPrice = total;
-    }
+    private Double totalPrice; // Calculado automáticamente
+    private String status; // Asignado automáticamente
 }
+

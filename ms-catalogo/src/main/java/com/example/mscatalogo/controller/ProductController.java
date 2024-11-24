@@ -37,8 +37,8 @@ public class ProductController {
 
     @PostMapping("/{id}/increase-stock")
     public ResponseEntity<Product> incrementarStock(@PathVariable Integer id, @RequestParam Integer stock) {
-        Product productoActualizado = productService.incrementarStock(id, stock);
-        return ResponseEntity.ok(productoActualizado);
+        Product updatedProduct  = productService.incrementarStock(id, stock);
+        return ResponseEntity.ok(updatedProduct);
     }
 
     @PutMapping("/{id}")

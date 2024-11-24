@@ -38,7 +38,9 @@ public class OrderServiceImpl implements OrderService {
         if (!clientResponse.getStatusCode().is2xxSuccessful() || clientResponse.getBody() == null) {
             throw new RuntimeException("Cliente no encontrado con ID: " + order.getClientId());
         }
-        order.setClientDto(clientResponse.getBody());
+
+        ClientDto clientDto = clientResponse.getBody();
+        order.setClientDto(clientDto);  // Establecer los detalles del cliente en el pedido
 
         // 2. Verificar los productos y actualizar el inventario
         Double totalPrice = 0.0;
@@ -57,36 +59,46 @@ public class OrderServiceImpl implements OrderService {
 
             // Actualizar el precio en el detalle del pedido
             orderDetail.setPrice(productDto.getPrecio());
-            totalPrice += productDto.getPrecio() * orderDetail.getQuantity();
+            orderDetail.calculateAmount(); // Calcular el amount basado en quantity y price
+            totalPrice += orderDetail.getAmount();
 
             // Reducir el stock del producto
             productFeign.reducirStock(orderDetail.getProductId(), orderDetail.getQuantity());
+
         }
 
         // Registrar el pedido
         order.setTotalPrice(totalPrice);  // Asignar el precio total del pedido
         order.setStatus("PENDING");  // El pedido inicia como pendiente hasta que se realice el pago
+
+        // Guardar el pedido
         Order savedOrder = orderRepository.save(order);
 
-        return savedOrder;
+        // Puedes devolver el pedido con los datos completos (cliente y productos) para mostrarlo
+        return savedOrder;  // Esto incluirá los detalles de cliente y productos ya asociados
     }
+
 
     @Override
     public Optional<Order> findById(Integer id) {
         Optional<Order> order = orderRepository.findById(id);
 
         if (order.isPresent()) {
-            // Enriquecer con el cliente
+            // Llamar al servicio de clientes utilizando solo el clientId
             ResponseEntity<ClientDto> clientResponse = clientFeign.getById(order.get().getClientId());
             if (clientResponse.getStatusCode().is2xxSuccessful() && clientResponse.getBody() != null) {
-                order.get().setClientDto(clientResponse.getBody());
+                // Puedes acceder a los datos del cliente solo cuando sea necesario
+                ClientDto clientDto = clientResponse.getBody();
+                // Hacer algo con los datos del cliente si es necesario (ejemplo: logging, validación, etc.)
             }
 
-            // Enriquecer los detalles con los productos
+            // Llamar al servicio de productos utilizando solo el productId
             order.get().getOrderDetails().forEach(orderDetail -> {
                 ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetail.getProductId());
                 if (productResponse.getStatusCode().is2xxSuccessful() && productResponse.getBody() != null) {
-                    orderDetail.setProductDto(productResponse.getBody());
+                    // Hacer algo con los datos del producto si es necesario
+                    ProductDto productDto = productResponse.getBody();
+                    // Por ejemplo, puedes verificar si los productos existen o hacer validaciones
                 }
             });
         }
@@ -97,20 +109,20 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void delete(Integer id) {
         // Validar si el pedido existe antes de eliminar
-        Optional<Order> pedidoOpt = orderRepository.findById(id);
-        if (!pedidoOpt.isPresent()) {
-            throw new RuntimeException("Pedido no encontrado con ID: " + id);
-        }
-
-        Order pedido = pedidoOpt.get();
+        Order pedido = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Pedido no encontrado con ID: " + id));
 
         // Restaurar el stock de los productos incluidos en el pedido
         for (OrderDetail orderDetail : pedido.getOrderDetails()) {
-            ResponseEntity<ProductDto> productResponse = productFeign.incrementarStock(
-                    orderDetail.getProductId(), orderDetail.getQuantity()
-            );
-            if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
-                throw new RuntimeException("Error al incrementar el stock del producto con ID: " + orderDetail.getProductId());
+            try {
+                ResponseEntity<ProductDto> productResponse = productFeign.incrementarStock(
+                        orderDetail.getProductId(), orderDetail.getQuantity()
+                );
+                if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
+                    throw new RuntimeException("Error al incrementar el stock del producto con ID: " + orderDetail.getProductId());
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error al llamar al servicio de productos: " + e.getMessage(), e);
             }
         }
         orderRepository.deleteById(id);
