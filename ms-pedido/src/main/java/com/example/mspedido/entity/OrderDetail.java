@@ -22,11 +22,14 @@ public class OrderDetail {
     private Double amount; // Calculado automáticamente
 
     @Transient
-    private ProductDto productDto; // No lo envías en la solicitud
+    private ProductDto productDto; // No lo enviamos en la solicitud, pero lo usamos para enriquecer el detalle
 
+    // Método para calcular el monto del detalle (price * quantity)
     public void calculateAmount() {
-        this.amount = this.price * this.quantity;
+        if (this.price != null && this.quantity != null) {
+            this.amount = this.price * this.quantity;
+        } else {
+            this.amount = 0.0;
+        }
     }
 }
-
-

@@ -4,6 +4,7 @@ import com.example.mspedido.dto.ClientDto;
 import com.example.mspedido.dto.ProductDto;
 import com.example.mspedido.entity.Order;
 import com.example.mspedido.entity.OrderDetail;
+import com.example.mspedido.exception.ResourceNotFoundException;
 import com.example.mspedido.feign.ClientFeign;
 import com.example.mspedido.feign.ProductFeign;
 import com.example.mspedido.repository.OrderRepository;
@@ -11,12 +12,16 @@ import com.example.mspedido.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class OrderServiceImpl implements OrderService {
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
+
 
     @Autowired
     private OrderRepository orderRepository;
@@ -28,43 +33,65 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> list() {
-        return orderRepository.findAll();
+        List<Order> orders = orderRepository.findAll();
+
+        // Para cada pedido, obtener los detalles completos del cliente y los productos
+        for (Order order : orders) {
+            // Obtener los detalles del cliente
+            ResponseEntity<ClientDto> clientResponse = clientFeign.getById(order.getClientId());
+            if (clientResponse.getStatusCode().is2xxSuccessful() && clientResponse.getBody() != null) {
+                order.setClientDto(clientResponse.getBody());
+            }
+
+            // Para cada detalle del pedido, obtener los detalles completos del producto
+            for (OrderDetail orderDetail : order.getOrderDetails()) {
+                Integer productId = orderDetail.getProductId();
+                ResponseEntity<ProductDto> productResponse = productFeign.getById(productId);
+                if (productResponse.getStatusCode().is2xxSuccessful() && productResponse.getBody() != null) {
+                    ProductDto productDto = productResponse.getBody();
+                    orderDetail.setProductDto(productDto); // Asignar el ProductDto completo al detalle
+                }
+            }
+        }
+
+        // Retornar la lista de pedidos con los detalles completos del cliente y los productos
+        return orders;
     }
 
     @Override
     public Order save(Order order) {
-        // 1. Verificar que el cliente existe
+        // Verificar si el cliente existe
         ResponseEntity<ClientDto> clientResponse = clientFeign.getById(order.getClientId());
         if (!clientResponse.getStatusCode().is2xxSuccessful() || clientResponse.getBody() == null) {
-            throw new RuntimeException("Cliente no encontrado con ID: " + order.getClientId());
+            throw new ResourceNotFoundException("Cliente no encontrado con ID: " + order.getClientId());
         }
 
         ClientDto clientDto = clientResponse.getBody();
         order.setClientDto(clientDto);  // Establecer los detalles del cliente en el pedido
 
-        // 2. Verificar los productos y actualizar el inventario
+        // Verificar los productos solo usando el productId
         Double totalPrice = 0.0;
         for (OrderDetail orderDetail : order.getOrderDetails()) {
-            // Obtener el producto usando el productId
-            ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetail.getProductId());
+            // Usar el productId para obtener los detalles completos del producto
+            Integer productId = orderDetail.getProductId();
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(productId);
             if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
-                throw new RuntimeException("Producto no encontrado con ID: " + orderDetail.getProductId());
+                throw new RuntimeException("Producto no encontrado con ID: " + productId);
             }
 
-            // Verificar si hay suficiente stock
             ProductDto productDto = productResponse.getBody();
             if (productDto.getStock() < orderDetail.getQuantity()) {
-                throw new RuntimeException("Stock insuficiente para el producto: " + productDto.getName());
+                throw new RuntimeException("Stock insuficiente para el producto con ID: " + productId);
             }
 
-            // Actualizar el precio en el detalle del pedido
+            // Establecer el precio en el detalle del pedido y calcular el monto
             orderDetail.setPrice(productDto.getPrecio());
+            orderDetail.setProductDto(productDto); // Asignar el ProductDto completo al detalle
             orderDetail.calculateAmount(); // Calcular el amount basado en quantity y price
             totalPrice += orderDetail.getAmount();
 
             // Reducir el stock del producto
-            productFeign.reducirStock(orderDetail.getProductId(), orderDetail.getQuantity());
-
+            productFeign.reducirStock(productId, orderDetail.getQuantity());
         }
 
         // Registrar el pedido
@@ -74,37 +101,43 @@ public class OrderServiceImpl implements OrderService {
         // Guardar el pedido
         Order savedOrder = orderRepository.save(order);
 
-        // Puedes devolver el pedido con los datos completos (cliente y productos) para mostrarlo
-        return savedOrder;  // Esto incluirá los detalles de cliente y productos ya asociados
+        // Retornar el pedido guardado (con cliente y productos completos)
+        return savedOrder;
     }
+
+
 
 
     @Override
     public Optional<Order> findById(Integer id) {
-        Optional<Order> order = orderRepository.findById(id);
+        // Obtener el pedido por ID
+        Optional<Order> orderOptional = orderRepository.findById(id);
 
-        if (order.isPresent()) {
-            // Llamar al servicio de clientes utilizando solo el clientId
-            ResponseEntity<ClientDto> clientResponse = clientFeign.getById(order.get().getClientId());
+        if (orderOptional.isPresent()) {
+            Order order = orderOptional.get();
+
+            // Obtener el detalle del cliente
+            ResponseEntity<ClientDto> clientResponse = clientFeign.getById(order.getClientId());
             if (clientResponse.getStatusCode().is2xxSuccessful() && clientResponse.getBody() != null) {
-                // Puedes acceder a los datos del cliente solo cuando sea necesario
-                ClientDto clientDto = clientResponse.getBody();
-                // Hacer algo con los datos del cliente si es necesario (ejemplo: logging, validación, etc.)
+                order.setClientDto(clientResponse.getBody());
             }
 
-            // Llamar al servicio de productos utilizando solo el productId
-            order.get().getOrderDetails().forEach(orderDetail -> {
-                ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetail.getProductId());
+            // Obtener los detalles del producto para cada OrderDetail
+            for (OrderDetail orderDetail : order.getOrderDetails()) {
+                Integer productId = orderDetail.getProductId();
+                ResponseEntity<ProductDto> productResponse = productFeign.getById(productId);
                 if (productResponse.getStatusCode().is2xxSuccessful() && productResponse.getBody() != null) {
-                    // Hacer algo con los datos del producto si es necesario
                     ProductDto productDto = productResponse.getBody();
-                    // Por ejemplo, puedes verificar si los productos existen o hacer validaciones
+                    orderDetail.setProductDto(productDto); // Asignar el ProductDto completo al detalle
                 }
-            });
+            }
+
+            return Optional.of(order);
         }
 
-        return order;
+        return Optional.empty();
     }
+
 
     @Override
     public void delete(Integer id) {
@@ -133,15 +166,56 @@ public class OrderServiceImpl implements OrderService {
         // Validar si el cliente existe antes de actualizar el pedido
         ResponseEntity<ClientDto> response = clientFeign.getById(order.getClientId());
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-            throw new RuntimeException("Cliente no encontrado con ID: " + order.getClientId());
+            throw new ResourceNotFoundException("Cliente no encontrado con ID: " + order.getClientId());
+        }
+
+        // Validar que el pedido existe antes de actualizarlo
+        Optional<Order> existingOrder = orderRepository.findById(order.getId());
+        if (existingOrder.isEmpty()) {
+            throw new ResourceNotFoundException("Pedido no encontrado con ID: " + order.getId());
         }
 
         // Actualizar el pedido
-        Order updatedOrder = orderRepository.save(order);
+        Order updatedOrder = existingOrder.get();
+        updatedOrder.setClientId(order.getClientId());
+        updatedOrder.setNumber(order.getNumber());
+
+        if (order.getStatus() != null) {
+            updatedOrder.setStatus(order.getStatus());
+        } else {
+            updatedOrder.setStatus("PENDING");
+        }
+
+        updatedOrder.setTotalPrice(order.getTotalPrice());
+        updatedOrder.setOrderDetails(order.getOrderDetails());
 
         // Enriquecer con información del cliente (opcional)
         updatedOrder.setClientDto(response.getBody());
 
+        // Obtener los detalles del producto para cada OrderDetail
+        Double totalPrice = 0.0; // Variable para acumular el total del pedido
+        for (OrderDetail orderDetail : updatedOrder.getOrderDetails()) {
+            Integer productId = orderDetail.getProductId();
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(productId);
+
+            if (productResponse.getStatusCode().is2xxSuccessful() && productResponse.getBody() != null) {
+                ProductDto productDto = productResponse.getBody();
+                orderDetail.setProductDto(productDto);  // Asignar el ProductDto completo al detalle
+
+                // Asignar el precio del producto al detalle del pedido
+                orderDetail.setPrice(productDto.getPrecio());
+                orderDetail.calculateAmount();  // Calcular el monto basado en el precio y cantidad
+            } else {
+                throw new RuntimeException("Producto no encontrado con ID: " + productId);
+            }
+        }
+
+        updatedOrder.setTotalPrice(totalPrice); // Asignar el precio total del pedido
+
+        // Guardar el pedido actualizado
+        updatedOrder = orderRepository.save(updatedOrder);
+
         return updatedOrder;
     }
+
 }

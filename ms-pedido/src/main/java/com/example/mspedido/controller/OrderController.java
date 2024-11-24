@@ -23,17 +23,22 @@ public class OrderController {
     private OrderService orderService;
 
     @GetMapping
-    public ResponseEntity<List<Order>> getAll() {
-        return ResponseEntity.ok(orderService.list());
+    public ResponseEntity<List<Order>> listOrders() {
+        List<Order> orders = orderService.list();
+        return ResponseEntity.ok(orders);
     }
-
     @GetMapping("/{id}")
-    public ResponseEntity<Optional<Order>> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(orderService.findById(id));
+    public ResponseEntity<Order> getOrderById(@PathVariable Integer id) {
+        Optional<Order> order = orderService.findById(id);
+        if (order.isPresent()) {
+            return ResponseEntity.ok(order.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponseDTO> save(@RequestBody @Valid OrderRequestDTO orderRequestDTO) {
+    public ResponseEntity<OrderResponseDTO> create(@RequestBody @Valid OrderRequestDTO orderRequestDTO) {
         // Mapear el DTO de entrada a la entidad Order
         Order order = new Order();
         order.setNumber(orderRequestDTO.getNumber());
@@ -74,22 +79,12 @@ public class OrderController {
     }
 
 
-    @PostMapping
-    public ResponseEntity<Order> create(@RequestBody Order order) {
-        try {
-            Order savedOrder = orderService.save(order);
-            return new ResponseEntity<>(savedOrder, HttpStatus.CREATED);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
+    @PutMapping("/{id}")
+    public ResponseEntity<Order> update(@PathVariable Integer id, @RequestBody Order order) {
+        order.setId(id);  // Establecer el ID del pedido recibido en la URL
+        return ResponseEntity.ok(orderService.update(order));  // Llamar al método update() en lugar de save()
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Order> update(@PathVariable Integer id,
-                                        @RequestBody Order order) {
-        order.setId(id);
-        return ResponseEntity.ok(orderService.save(order));
-    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<List<Order>> delete(@PathVariable Integer id) {
