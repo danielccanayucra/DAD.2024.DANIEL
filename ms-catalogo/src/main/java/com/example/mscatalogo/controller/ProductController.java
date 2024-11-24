@@ -29,6 +29,18 @@ public class ProductController {
         return ResponseEntity.ok(productService.save(product));
     }
 
+    @PostMapping("/{id}/reduce-stock")
+    public ResponseEntity<Product> reducirStock(@PathVariable Integer id, @RequestParam Integer stock) {
+        Product productoActualizado = productService.reducirStock(id, stock);
+        return ResponseEntity.ok(productoActualizado);
+    }
+
+    @PostMapping("/{id}/increase-stock")
+    public ResponseEntity<Product> incrementarStock(@PathVariable Integer id, @RequestParam Integer stock) {
+        Product productoActualizado = productService.incrementarStock(id, stock);
+        return ResponseEntity.ok(productoActualizado);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Product> update(@PathVariable Integer id,
                                           @RequestBody Product product) {

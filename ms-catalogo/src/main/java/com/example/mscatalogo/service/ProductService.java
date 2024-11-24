@@ -14,5 +14,10 @@ public interface ProductService {
 
     Product update(Product product);
 
+    Product reducirStock(Integer id, Integer stock);
+
+    Product incrementarStock(Integer id, Integer stock);
+
     void delete(Integer id);
+
 }

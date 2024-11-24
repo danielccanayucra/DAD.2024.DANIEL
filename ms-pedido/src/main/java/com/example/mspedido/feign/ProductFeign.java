@@ -6,6 +6,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
 
@@ -17,5 +19,12 @@ public interface ProductFeign {
     default ResponseEntity<ProductDto> productListById(Integer id, Exception e) {
         return ResponseEntity.ok(new ProductDto());
     }
+    @PostMapping("/{id}/reduce-stock")
+    ResponseEntity<ProductDto> reducirStock(@PathVariable Integer id, @RequestParam Integer stock);
+
+    @PostMapping("/{id}/increase-stock")
+    ResponseEntity<ProductDto> incrementarStock(@PathVariable Integer id, @RequestParam Integer stock);
+
+
 
 }

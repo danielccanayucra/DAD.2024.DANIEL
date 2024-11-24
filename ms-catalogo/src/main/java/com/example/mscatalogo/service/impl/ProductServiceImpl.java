@@ -38,6 +38,29 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void delete(Integer id) {
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        productRepository.delete(product);
+    }
+    @Override
+    public Product reducirStock(Integer id, Integer stock) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        if (product.getStock() < stock) {
+            throw new RuntimeException("Stock insuficiente para el producto: " + product.getName());
+        }
+
+        product.setStock(product.getStock() - stock);
+        return productRepository.save(product);
+    }
+
+    @Override
+    public Product incrementarStock(Integer id, Integer stock) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        product.setStock(product.getStock() + stock);
+        return productRepository.save(product);
     }
 }
