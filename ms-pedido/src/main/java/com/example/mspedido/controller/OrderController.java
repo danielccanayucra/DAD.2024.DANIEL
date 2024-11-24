@@ -3,8 +3,11 @@ package com.example.mspedido.controller;
 import com.example.mspedido.dto.OrderDetailResponseDTO;
 import com.example.mspedido.dto.OrderRequestDTO;
 import com.example.mspedido.dto.OrderResponseDTO;
+import com.example.mspedido.dto.ProductDto;
 import com.example.mspedido.entity.Order;
 import com.example.mspedido.entity.OrderDetail;
+import com.example.mspedido.exception.ResourceNotFoundException;
+import com.example.mspedido.feign.ProductFeign;
 import com.example.mspedido.service.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,8 @@ import java.util.stream.Collectors;
 public class OrderController {
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private ProductFeign productFeign;
 
     @GetMapping
     public ResponseEntity<List<Order>> listOrders() {
@@ -80,10 +85,69 @@ public class OrderController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<Order> update(@PathVariable Integer id, @RequestBody Order order) {
-        order.setId(id);  // Establecer el ID del pedido recibido en la URL
-        return ResponseEntity.ok(orderService.update(order));  // Llamar al método update() en lugar de save()
+    public ResponseEntity<OrderResponseDTO> update(@PathVariable Integer id, @RequestBody @Valid OrderRequestDTO orderRequestDTO) {
+        // Buscar el pedido existente
+        Optional<Order> existingOrder = orderService.findById(id);
+        if (!existingOrder.isPresent()) {
+            throw new ResourceNotFoundException("Pedido no encontrado con ID: " + id);
+        }
+
+        // Actualizar el pedido
+        Order order = existingOrder.get();
+        order.setNumber(orderRequestDTO.getNumber());
+        order.setClientId(orderRequestDTO.getClientId());
+
+        // Actualizar los detalles del pedido
+        List<OrderDetail> orderDetails = orderRequestDTO.getOrderDetails().stream().map(orderDetailRequest -> {
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setProductId(orderDetailRequest.getProductId());
+            orderDetail.setQuantity(orderDetailRequest.getQuantity());
+
+            // Recuperar el producto usando productId y asignar el ProductDto
+            ResponseEntity<ProductDto> productResponse = productFeign.getById(orderDetailRequest.getProductId());
+            if (!productResponse.getStatusCode().is2xxSuccessful() || productResponse.getBody() == null) {
+                throw new RuntimeException("Producto no encontrado con ID: " + orderDetailRequest.getProductId());
+            }
+
+            ProductDto productDto = productResponse.getBody();
+            orderDetail.setProductDto(productDto);
+            orderDetail.setPrice(productDto.getPrecio());
+            orderDetail.calculateAmount(); // Calcular amount
+
+            return orderDetail;
+        }).collect(Collectors.toList());
+
+        order.setOrderDetails(orderDetails);
+
+        // Actualizar totalPrice (basado en el precio de los detalles)
+        double totalPrice = orderDetails.stream().mapToDouble(OrderDetail::getAmount).sum();
+        order.setTotalPrice(totalPrice);
+
+        // Guardar el pedido actualizado
+        Order updatedOrder = orderService.save(order);
+
+        // Mapear la entidad actualizada al DTO de respuesta
+        OrderResponseDTO responseDTO = new OrderResponseDTO();
+        responseDTO.setId(updatedOrder.getId());
+        responseDTO.setNumber(updatedOrder.getNumber());
+        responseDTO.setClientId(updatedOrder.getClientId());
+        responseDTO.setClientDto(updatedOrder.getClientDto());
+        responseDTO.setOrderDetails(updatedOrder.getOrderDetails().stream().map(detail -> {
+            OrderDetailResponseDTO detailDTO = new OrderDetailResponseDTO();
+            detailDTO.setId(detail.getId());
+            detailDTO.setProductId(detail.getProductId());
+            detailDTO.setQuantity(detail.getQuantity());
+            detailDTO.setPrice(detail.getPrice());
+            detailDTO.setAmount(detail.getAmount());
+            detailDTO.setProductDto(detail.getProductDto());  // Aquí se incluye el ProductDto con todos sus detalles
+            return detailDTO;
+        }).collect(Collectors.toList()));
+        responseDTO.setTotalPrice(updatedOrder.getTotalPrice());
+        responseDTO.setStatus(updatedOrder.getStatus());
+
+        return ResponseEntity.ok(responseDTO);
     }
+
 
 
     @DeleteMapping("/{id}")

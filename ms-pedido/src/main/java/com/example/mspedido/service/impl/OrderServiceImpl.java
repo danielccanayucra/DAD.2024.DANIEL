@@ -194,6 +194,8 @@ public class OrderServiceImpl implements OrderService {
 
         // Obtener los detalles del producto para cada OrderDetail
         Double totalPrice = 0.0; // Variable para acumular el total del pedido
+
+
         for (OrderDetail orderDetail : updatedOrder.getOrderDetails()) {
             Integer productId = orderDetail.getProductId();
             ResponseEntity<ProductDto> productResponse = productFeign.getById(productId);
@@ -204,7 +206,8 @@ public class OrderServiceImpl implements OrderService {
 
                 // Asignar el precio del producto al detalle del pedido
                 orderDetail.setPrice(productDto.getPrecio());
-                orderDetail.calculateAmount();  // Calcular el monto basado en el precio y cantidad
+                orderDetail.calculateAmount();// Calcular el monto basado en el precio y cantidad
+                totalPrice += orderDetail.getAmount();
             } else {
                 throw new RuntimeException("Producto no encontrado con ID: " + productId);
             }
