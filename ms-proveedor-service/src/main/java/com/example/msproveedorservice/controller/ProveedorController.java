@@ -2,6 +2,7 @@ package com.example.msproveedorservice.controller;
 
 import com.example.msproveedorservice.entity.Proveedor;
 import com.example.msproveedorservice.service.ProveedorService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,15 +11,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/proveedor")
 public class ProveedorController {
-    private final ProveedorService proveedorService;
-
-    public ProveedorController(ProveedorService proveedorService) {
-        this.proveedorService = proveedorService;
-    }
+    @Autowired
+    private ProveedorService proveedorService;
 
     @GetMapping
-    public List<Proveedor> listarProveedores() {
-        return proveedorService.list();
+    public ResponseEntity<List<Proveedor>> getAll() {
+        return ResponseEntity.ok(proveedorService.list());
     }
 
     @GetMapping("/{id}")
@@ -27,8 +25,8 @@ public class ProveedorController {
     }
 
     @PostMapping
-    public Proveedor create(@RequestBody Proveedor proveedor) {
-        return proveedorService.save(proveedor);
+    public ResponseEntity<Proveedor> create(@RequestBody Proveedor Proveedor) {
+        return ResponseEntity.ok(proveedorService.save(Proveedor));
     }
 
     @PutMapping("/{id}")
