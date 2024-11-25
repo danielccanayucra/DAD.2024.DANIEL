@@ -56,7 +56,7 @@ spring:
         - id: ms-pedido-service
           uri: lb://ms-pedido-service
           predicates:
-            - Path=/pedido/**
+            - Path=/git/**
 
 
         - id: ms-inventario-service

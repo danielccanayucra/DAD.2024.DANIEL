@@ -1,18 +1,18 @@
 import { Routes } from '@angular/router';
-import {ClientContainerComponent} from "./containers/client-container.component";
-import {ClientComponent} from "./client.component";
+import {CategoryContainerComponent} from "./containers/category-container.component";
+import {CategoryComponent} from "./category.component";
 
 export default [
 
   {
     path     : '',
-    component: ClientComponent,
+    component: CategoryComponent,
     children: [
       {
         path: '',
-        component: ClientContainerComponent,
+        component: CategoryContainerComponent,
         data: {
-          title: 'Clientes'
+          title: 'Categorias'
         }
       },
     ],

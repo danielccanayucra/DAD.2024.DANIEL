@@ -33,6 +33,15 @@ import { MatDialog } from '@angular/material/dialog';
                                 <th class="w-2/6 table-header text-center px-5 border-r">
                                     Nombre
                                 </th>
+                                <th class="w-2/6 table-header text-center px-5 border-r">
+                                    apellido
+                                </th>
+                                <th class="w-2/6 table-header text-center px-5 border-r">
+                                    telefono
+                                </th>
+                                <th class="w-2/6 table-header text-center px-5 border-r">
+                                    documento
+                                </th>
                                 <th class="w-1/6 table-header text-center border-r">
                                     Estado
                                 </th>
@@ -49,7 +58,16 @@ import { MatDialog } from '@angular/material/dialog';
                                     {{ i }}
                                 </td>
                                 <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.nombre }}
+                                    {{ r.name }}
+                                </td>
+                                <td class="w-2/6 p-2  text-start border-b text-sm">
+                                    {{ r.apellido }}
+                                </td>
+                                <td class="w-2/6 p-2  text-start border-b text-sm">
+                                    {{ r.telefono }}
+                                </td>
+                                <td class="w-2/6 p-2  text-start border-b text-sm">
+                                    {{ r.document }}
                                 </td>
                                 <td class="w-1/6 p-2 text-center border-b text-sm">
                                     <div

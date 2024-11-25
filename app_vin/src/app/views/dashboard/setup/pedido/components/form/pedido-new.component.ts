@@ -11,12 +11,12 @@ import { abcForms } from '../../../../../../../environments/generals';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
-    selector: 'app-categorys-new',
+    selector: 'app-pedidos-new',
     standalone: true,
     imports: [
         FormsModule,
@@ -35,59 +35,64 @@ import { MatInputModule } from '@angular/material/input';
                 <button mat-icon-button (click)="cancelForm()" [tabIndex]="-1">
                     <mat-icon
                         class="text-current"
-                        [svgIcon]="'heroicons_outline:x-mark'"
-                    ></mat-icon>
+                        [svgIcon]="'heroicons_outline:x-mark'">
+                    </mat-icon>
                 </button>
             </div>
 
-
             <!-- Compose form -->
-            <form class="flex flex-col flex-auto p-6 sm:p-8 overflow-y-auto" [formGroup]="categoryForm">
+            <form class="flex flex-col flex-auto p-6 sm:p-8 overflow-y-auto" [formGroup]="pedidoForm">
                 <mat-form-field>
-                    <mat-label>Nombre</mat-label>
-                    <input matInput formControlName="nombre" />
+                    <mat-label>Cliente</mat-label>
+                    <input matInput formControlName="cliente" />
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Descripción</mat-label>
-                    <input matInput formControlName="apellidos" />
+                    <mat-label>Dirección de Entrega</mat-label>
+                    <input matInput formControlName="direccionEntrega" />
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>Código</mat-label>
-                    <input matInput formControlName="dni" />
+                    <mat-label>Fecha del Pedido</mat-label>
+                    <input matInput formControlName="fechaPedido" type="date" />
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Total</mat-label>
+                    <input matInput formControlName="total" type="number" />
+                </mat-form-field>
+                <mat-form-field>
+                    <mat-label>Estado</mat-label>
+                    <input matInput formControlName="estado" />
                 </mat-form-field>
                 <!-- Actions -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mt-4 sm:mt-6">
                     <div class="flex space-x-2 items-center mt-4 sm:mt-0 ml-auto">
                         <button mat-stroked-button [color]="'warn'" (click)="cancelForm()">Cancelar</button>
-                        <button mat-stroked-button [color]="'primary'" (click)="saveForm()">
-                            Guardar
-                        </button>
+                        <button mat-stroked-button [color]="'primary'" (click)="saveForm()">Guardar</button>
                     </div>
                 </div>
             </form>
         </div>
     `,
 })
-export class CategoryNewComponent implements OnInit {
+export class PedidoNewComponent implements OnInit {
     @Input() title: string = '';
     abcForms: any;
-    categoryForm = new FormGroup({
-        nombre: new FormControl('', [Validators.required]),
-        apellidos: new FormControl('', [Validators.required]),
-        dni: new FormControl('', [Validators.required]),
-        telefono: new FormControl('', [Validators.required]),
-        correo: new FormControl('', [Validators.required]),
+    pedidoForm = new FormGroup({
+        cliente: new FormControl('', [Validators.required]),
+        direccionEntrega: new FormControl('', [Validators.required]),
+        fechaPedido: new FormControl('', [Validators.required]),
+        total: new FormControl('', [Validators.required]),
+        estado: new FormControl('', [Validators.required]),
     });
 
-    constructor(private _matDialog: MatDialogRef<CategoryNewComponent>) {}
+    constructor(private _matDialog: MatDialogRef<PedidoNewComponent>) {}
 
     ngOnInit() {
         this.abcForms = abcForms;
     }
 
     public saveForm(): void {
-        if (this.categoryForm.valid) {
-            this._matDialog.close(this.categoryForm.value);
+        if (this.pedidoForm.valid) {
+            this._matDialog.close(this.pedidoForm.value);
         }
     }
 
