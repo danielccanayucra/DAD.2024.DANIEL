@@ -53,7 +53,7 @@ spring:
         - id: ms-adquisicion-service
           uri: lb://ms-adquisicion-service
           predicates:
-            - Path=/adquisicion/**
+            - Path=/adquisiciones/**
           filters:
             - AuthFilter
         - id: ms-auth-service
