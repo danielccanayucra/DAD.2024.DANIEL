@@ -34,7 +34,7 @@ spring:
         - id: ms-catalogo-service
           uri: lb://ms-catalogo-service
           predicates:
-            - Path=/category/**, /product/**
+            - Path=/product/**
 
         - id: ms-auth-service
           uri: lb://ms-auth-service
@@ -56,7 +56,7 @@ spring:
         - id: ms-pedido-service
           uri: lb://ms-pedido-service
           predicates:
-            - Path=/git/**
+            - Path=/pedido/**
 
 
         - id: ms-inventario-service

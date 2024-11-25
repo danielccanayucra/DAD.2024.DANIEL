@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
 
-@FeignClient(name = "ms-catalogo-service", path = "/producto")
+@FeignClient(name = "ms-catalogo-service", path = "/product")
 public interface ProductFeign {
     @GetMapping("/{id}")
     @CircuitBreaker(name = "productListByIdCB", fallbackMethod = "productListById")
