@@ -48,10 +48,6 @@ import {MatDialogRef} from "@angular/material/dialog";
                 <mat-label>Telefono</mat-label>
                 <input matInput formControlName="telefono" />
             </mat-form-field>
-            <mat-form-field>
-                <mat-label>Correo</mat-label>
-                <input matInput formControlName="correo" />
-            </mat-form-field>
             <!-- Actions -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between mt-4 sm:mt-6">
                 <div class="flex space-x-2 items-center mt-4 sm:mt-0 ml-auto">
@@ -71,7 +67,6 @@ export class ClientEditComponent implements OnInit {
         apellidos: new FormControl('', [Validators.required]),
         dni: new FormControl('', [Validators.required]),
         telefono: new FormControl('', [Validators.required]),
-        correo: new FormControl('', [Validators.required]),
     });
   @Input() title: string = '';
   @Input() client = new Client();

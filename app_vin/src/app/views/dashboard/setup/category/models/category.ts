@@ -1,9 +1,7 @@
-export class Client {
+export class Category {
 
     id?: number;
-    nombre?: string;
-    apellidos?: string;
-    dni?: string;
-    telefono?: string;
-    correo?: string;
+    name?: string;
+    descripcion?: string;
+    code?: string;
 }
