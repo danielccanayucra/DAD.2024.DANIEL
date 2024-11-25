@@ -7,13 +7,14 @@ import java.util.Optional;
 
 public interface ProveedorService {
 
-    List<Proveedor> list();
+    public List<Proveedor> list();
 
-    Optional<Proveedor> findById(Integer id);
+    public Optional<Proveedor> findById(Integer id);
+    Optional<Proveedor> listarPorId(Integer id);
 
-    Proveedor save(Proveedor proveedor);
+    public Proveedor save(Proveedor proveedor);
 
-    Proveedor update(Integer id, Proveedor proveedor);
+    public Proveedor update(Proveedor proveedor);
 
-    void delete(Integer id);
+    public void deleteById(Integer id);
 }

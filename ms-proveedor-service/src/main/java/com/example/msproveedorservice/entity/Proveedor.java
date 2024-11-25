@@ -13,7 +13,7 @@ public class Proveedor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String nombre;
-    private String contacto;
+    private String ruc;
     private String direccion;
     private String telefono;
     private String email;
