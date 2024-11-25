@@ -1,13 +1,23 @@
 package com.example.mscatalogo.service;
 
 import com.example.mscatalogo.entity.Product;
+
 import java.util.List;
 import java.util.Optional;
 
 public interface ProductService {
-    public List<Product> list();
-    public Product save(Product Product);
-    public Product update(Product Product);
-    public Optional<Product> findById(Integer id);
-    public void deleteById(Integer id);
+    List<Product> list();
+
+    Optional<Product> findById(Integer id);
+
+    Product save(Product product);
+
+    Product update(Product product);
+
+    Product reducirStock(Integer id, Integer stock);
+
+    Product incrementarStock(Integer id, Integer stock);
+
+    void delete(Integer id);
+
 }

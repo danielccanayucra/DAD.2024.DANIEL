@@ -7,43 +7,50 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/producto")
+    @RequestMapping("/producto")
 public class ProductController {
-
     @Autowired
     private ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<Product>> list() {
-        List<Product> products = productService.list();
-        return ResponseEntity.ok(products);
-    }
-
-    @PostMapping
-    public ResponseEntity<Product> save(@RequestBody Product product) {
-        Product savedProduct = productService.save(product);
-        return ResponseEntity.ok(savedProduct);
-    }
-
-    @PutMapping
-    public ResponseEntity<Product> update(@RequestBody Product product) {
-        Product updatedProduct = productService.update(product);
-        return ResponseEntity.ok(updatedProduct);
+    public ResponseEntity<List<Product>> getAll() {
+        return ResponseEntity.ok(productService.list());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> listById(@PathVariable Integer id) {
-        Optional<Product> product = productService.findById(id);
-        return product.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Product> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(productService.findById(id).get());
+    }
+
+    @PostMapping
+    public ResponseEntity<Product> create(@RequestBody Product product) {
+        return ResponseEntity.ok(productService.save(product));
+    }
+
+    @PostMapping("/{id}/reduce-stock")
+    public ResponseEntity<Product> reducirStock(@PathVariable Integer id, @RequestParam Integer stock) {
+        Product productoActualizado = productService.reducirStock(id, stock);
+        return ResponseEntity.ok(productoActualizado);
+    }
+
+    @PostMapping("/{id}/increase-stock")
+    public ResponseEntity<Product> incrementarStock(@PathVariable Integer id, @RequestParam Integer stock) {
+        Product updatedProduct  = productService.incrementarStock(id, stock);
+        return ResponseEntity.ok(updatedProduct);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> update(@PathVariable Integer id,
+                                          @RequestBody Product product) {
+        product.setId(id);
+        return ResponseEntity.ok(productService.save(product));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteById(@PathVariable Integer id) {
-        productService.deleteById(id);
-        return ResponseEntity.ok("Eliminación Correcta");
+    public ResponseEntity<List<Product>> delete(@PathVariable Integer id) {
+        productService.delete(id);
+        return ResponseEntity.ok(productService.list());
     }
 }
