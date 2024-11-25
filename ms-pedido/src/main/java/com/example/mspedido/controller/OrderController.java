@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/pedido")
 public class OrderController {
     private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
 
