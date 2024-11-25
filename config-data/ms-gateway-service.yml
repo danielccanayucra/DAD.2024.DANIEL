@@ -50,6 +50,12 @@ spring:
             - Path=/order/**
           filters:
             - AuthFilter
+        - id: ms-adquisicion-service
+          uri: lb://ms-adquisicion-service
+          predicates:
+            - Path=/adquisicion/**
+          filters:
+            - AuthFilter
         - id: ms-auth-service
           uri: lb://ms-auth-service
           predicates:
