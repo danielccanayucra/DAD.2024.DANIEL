@@ -6,13 +6,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface InventarioService {
-    public List<Inventario> list(); // Lista todos los inventarios.
+    public List<Inventario> list();
 
-    public Inventario save(Inventario inventario); // Guarda un nuevo inventario.
+    public Inventario save(Inventario inventario);
 
-    public Inventario update(Inventario inventario); // Actualiza un inventario existente.
+    public Inventario update(Inventario inventario);
 
-    Optional<Inventario> findById(Integer id); // Busca un inventario por ID y obtiene proveedor y detalles.
+    Optional<Inventario> findById(Integer id);
 
-    public void delete(Integer id); // Elimina un inventario por ID.
+    public void delete(Integer id);
 }

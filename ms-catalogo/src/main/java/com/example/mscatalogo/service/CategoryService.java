@@ -1,14 +1,17 @@
 package com.example.mscatalogo.service;
 
 import com.example.mscatalogo.entity.Category;
-
 import java.util.List;
 import java.util.Optional;
 
 public interface CategoryService {
-    List<Category> list();
-    Optional<Category> findById(Integer id);
-    Category save(Category category);
-    Category update(Category category);
-    void delete(Integer id);
+    List<Category> list();  // Devuelve una lista de categorías
+
+    Category save(Category category);  // Guarda una nueva categoría
+
+    Category update(Category category);  // Actualiza una categoría existente
+
+    Optional<Category> findById(Integer id);  // Busca una categoría por su ID
+
+    void deleteById(Integer id);  // Elimina una categoría por su ID
 }

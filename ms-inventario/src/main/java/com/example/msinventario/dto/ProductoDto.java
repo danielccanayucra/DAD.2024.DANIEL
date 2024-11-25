@@ -1,17 +1,16 @@
 package com.example.msinventario.dto;
 
-import lombok.Data; // Importa la anotación de Lombok para generar automáticamente getters y setters
+import lombok.Data;
 
-@Data // Genera automáticamente los métodos getters, setters, toString, equals y hashCode
+@Data
 public class ProductoDto {
-    private Integer id; // ID único del producto
+    private Integer id;
 
-    private String nombre; // Nombre del producto
+    private String nombre;
 
-    private String modelo; // Modelo del producto
+    private String marca;
 
-    private Integer codigo; // Código del producto, puede ser un SKU o un código interno
+    private Integer codigo;
 
-    private byte[] imagen;
 
 }

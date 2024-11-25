@@ -9,18 +9,18 @@ import java.util.Optional;
 
 public interface ProductService {
 
-    // Listar todos los productos
+
     List<Producto> list();
 
-    // Guardar un producto con o sin imagen
-    Producto save(Producto product, MultipartFile imagen) throws IOException;
 
-    // Buscar un producto por ID
+    Producto save(Producto product);
+
+
     Optional<Producto> findById(Integer id);
 
-    // Actualizar un producto existente (con o sin imagen)
-    Producto update(Producto product, MultipartFile imagen) throws IOException;
 
-    // Eliminar un producto por ID
+    Producto update(Producto product);
+
+
     void deleteById(Integer id);
 }

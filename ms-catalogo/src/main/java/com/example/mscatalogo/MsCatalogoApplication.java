@@ -13,6 +13,7 @@ public class MsCatalogoApplication {
     public static void main(String[] args) {
         SpringApplication.run(MsCatalogoApplication.class, args);
     }
+
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI().info(new Info()

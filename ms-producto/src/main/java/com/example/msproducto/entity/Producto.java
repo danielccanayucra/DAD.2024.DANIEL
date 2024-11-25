@@ -15,10 +15,7 @@ public class Producto {
     private Integer id;
 
     private String nombre;
-    private String modelo;
+    private String marca;
     private Integer codigo;
     private Integer precio;
-
-    // Almacenar imagen como un array de bytes
-    private byte[] imagen;  // La imagen se almacena como un arreglo de bytes
 }

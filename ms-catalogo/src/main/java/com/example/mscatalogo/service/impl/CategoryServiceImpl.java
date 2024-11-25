@@ -11,6 +11,7 @@ import java.util.Optional;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
+
     @Autowired
     private CategoryRepository categoryRepository;
 
@@ -20,22 +21,32 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Optional<Category> findById(Integer id) {
-        return categoryRepository.findById(id);
-    }
-
-    @Override
     public Category save(Category category) {
         return categoryRepository.save(category);
     }
 
     @Override
     public Category update(Category category) {
+        // Verificación para asegurarse de que la categoría existe antes de actualizarla
+        if (!categoryRepository.existsById(category.getId())) {
+            throw new RuntimeException("Category not found");
+        }
         return categoryRepository.save(category);
     }
 
     @Override
-    public void delete(Integer id) {
+    public Optional<Category> findById(Integer id) {
+        return categoryRepository.findById(id);
+    }
+
+    @Override
+    public void deleteById(Integer id) {
+        // Aquí también se podría verificar si existe antes de borrar
+        if (!categoryRepository.existsById(id)) {
+            throw new RuntimeException("Category not found");
+        }
         categoryRepository.deleteById(id);
     }
+
+
 }

@@ -4,13 +4,13 @@ import lombok.Data; // Importa la anotación de Lombok para generar automáticam
 
 @Data // Genera automáticamente los métodos getters, setters, toString, equals y hashCode
 public class ProveedorDto {
-    private Integer id; // ID único del proveedor
+    private Integer id;
 
-    private String nombre; // Nombre del proveedor
+    private String nombre;
 
-    private String empresa; // Nombre de
+    private String ruc;
 
-    private String direccion; // Dirección del proveedor
+    private String direccion;
 
-    private String telefono; // Número de teléfono del proveedor
+    private String telefono;
 }

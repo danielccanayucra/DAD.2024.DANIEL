@@ -38,10 +38,8 @@ public class ProductoController {
         }
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> save(
-            @RequestPart("producto") Producto producto,
-            @RequestPart(value = "imagen", required = false) MultipartFile imagen) {
+    @PostMapping
+    public ResponseEntity<?> save(@RequestBody Producto producto) {
         try {
             // Validaciones básicas
             if (producto.getNombre() == null || producto.getNombre().trim().isEmpty()) {
@@ -49,51 +47,40 @@ public class ProductoController {
                         .body("El nombre del producto es requerido");
             }
 
-            // Validación del formato de imagen si se proporciona
-            if (imagen != null && !imagen.getContentType().startsWith("image/")) {
-                return ResponseEntity.badRequest()
-                        .body("El archivo debe ser una imagen");
-            }
+            // Guardar el producto
+            Producto savedProduct = productService.save(producto);
 
-            Producto savedProduct = productService.save(producto, imagen);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al procesar la imagen: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al guardar el producto: " + e.getMessage());
         }
     }
 
-    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+
+    @PutMapping("/{id}")
     public ResponseEntity<?> update(
             @PathVariable Integer id,
-            @RequestPart("producto") Producto producto,
-            @RequestPart(value = "imagen", required = false) MultipartFile imagen) {
+            @RequestBody Producto producto) {
         try {
+            // Verificar si el producto existe
             if (!productService.findById(id).isPresent()) {
                 return ResponseEntity.notFound().build();
             }
 
-            producto.setId(id); // Aseguramos que el ID sea el correcto
+            // Asegurar que el ID del producto sea el correcto
+            producto.setId(id);
 
-            // Validación del formato de imagen si se proporciona
-            if (imagen != null && !imagen.getContentType().startsWith("image/")) {
-                return ResponseEntity.badRequest()
-                        .body("El archivo debe ser una imagen");
-            }
+            // Actualizar el producto
+            Producto updatedProduct = productService.update(producto);
 
-            Producto updatedProduct = productService.update(producto, imagen);
             return ResponseEntity.ok(updatedProduct);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al procesar la imagen: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al actualizar el producto: " + e.getMessage());
         }
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Producto> listById(@PathVariable Integer id) {

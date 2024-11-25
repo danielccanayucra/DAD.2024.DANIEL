@@ -40,26 +40,24 @@ public class InventarioServiceImpl implements InventarioService {
     public Optional<Inventario> findById(Integer id) {
         Optional<Inventario> inventarioOptional = inventarioRepository.findById(id);
 
-        // Verifica si el Optional contiene un valor
+
         if (inventarioOptional.isPresent()) {
             Inventario inventario = inventarioOptional.get();
 
-            // Obtener proveedor mediante el cliente Feign
+
             ProveedorDto proveedorDto = proveedorFeign.getById(inventario.getProveedorId()).getBody();
             inventario.setProveedorDto(proveedorDto);
 
-            // Recorre los detalles del inventario solo si el inventario existe
+
             for (InventarioDetalle detalleInventario : inventario.getInventarioDetalle()) {
-                // Obtiene el producto asociado al detalle del inventario y lo establece
+
                 ProductoDto productoDto = productoFeign.getById(detalleInventario.getProductoId()).getBody();
                 detalleInventario.setProductoDto(productoDto);
             }
 
-            // Retorna el Optional con el inventario modificado
+
             return Optional.of(inventario);
         } else {
-            // Maneja el caso en que el inventario no se encuentra, por ejemplo:
-            // Lanzar una excepción personalizada o retornar un Optional vacío
             return Optional.empty();
         }
     }

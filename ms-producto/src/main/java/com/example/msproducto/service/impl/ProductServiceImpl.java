@@ -28,12 +28,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Producto save(Producto product, MultipartFile imagen) throws IOException {
+    public Producto save(Producto product){
         validateProduct(product);
-        if (imagen != null && !imagen.isEmpty()) {
-            validateImage(imagen);
-            product.setImagen(imagen.getBytes());
-        }
         return productoRepository.save(product);
     }
 
@@ -46,7 +42,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Producto update(Producto product, MultipartFile imagen) throws IOException {
+    public Producto update(Producto product){
         if (product.getId() == null) {
             throw new IllegalArgumentException("El ID del producto no puede ser nulo para actualizar");
         }
@@ -58,13 +54,6 @@ public class ProductServiceImpl implements ProductService {
 
         validateProduct(product);
 
-        if (imagen != null && !imagen.isEmpty()) {
-            validateImage(imagen);
-            product.setImagen(imagen.getBytes());
-        } else {
-            // Mantener la imagen existente si no se proporciona una nueva
-            product.setImagen(existingProduct.get().getImagen());
-        }
 
         return productoRepository.save(product);
     }

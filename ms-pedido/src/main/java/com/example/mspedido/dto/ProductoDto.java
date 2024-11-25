@@ -7,7 +7,6 @@ public class
 ProductoDto {
     private Integer id;
     private String nombre;
-    private String modelo;
+    private String marca;
     private Integer codigo;
-    private byte[] imagen;
 }
