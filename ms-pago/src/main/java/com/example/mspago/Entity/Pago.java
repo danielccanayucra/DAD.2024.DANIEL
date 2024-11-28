@@ -11,37 +11,18 @@ import java.util.List; // Importa la clase List para manejar listas
 @Entity // Indica que esta clase es una entidad JPA
 @Data // Genera automáticamente los métodos getters, setters, toString, equals y hashCode
 public class Pago {
-    @Id // Indica que este campo es la clave primaria
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Genera automáticamente el valor de ID
-    private Integer id; // ID único del pago
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    private String nombre; // Nombre del pago
 
-    private String descripcion; // Descripción del pago
+    private Integer pedidoId;
 
-    private Double monto; // Monto total del pago
+    private Double monto;
 
-    private String metodo; // Método de pago utilizado
+    private String estado; // COMPLETADO, FALLIDO, etc.
 
-    private Integer clienteId; // Referencia externa del cliente
-
-    private String estado; // Estado del pago (ej.: PENDING, COMPLETED, FAILED)
-
-    private Integer codigo; // Código único de la transacción
-
-    private LocalDateTime fechaCreacion; // Fecha de creación del pago
-
-    private LocalDateTime fechaActualizacion; // Fecha de última actualización
-
-    // Constructor por defecto que inicializa monto a 0
-    public Pago() {
-        this.monto = 0.0; // Inicializa el monto a 0.0
-    }
-
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"}) // Ignora propiedades innecesarias durante la serialización
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL) // Define una relación uno a muchos
-    @JoinColumn(name = "pago_id") // Nombre de la columna en la tabla hija que hace referencia a esta entidad
-    private List<PagoDetalle> pagoDetalle; // Lista de detalles de pago
+    private String metodoPago; // Ejemplo: TARJETA, PAYPAL, EFECTIVO
 
     @Transient // Indica que este campo no se persiste en la base de datos
     private ClienteDto clienteDto; // Objeto Cliente, no persistido en la base de datos

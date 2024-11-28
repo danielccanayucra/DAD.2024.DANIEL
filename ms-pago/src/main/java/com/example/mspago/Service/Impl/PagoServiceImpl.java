@@ -1,18 +1,14 @@
 package com.example.mspago.Service.Impl;
 
-import com.example.mspago.dto.ProductoDto; // Importa el DTO de Producto
-import com.example.mspago.dto.ClienteDto; // Importa el DTO de Cliente
-import com.example.mspago.Entity.Pago; // Importa la entidad Pago
-import com.example.mspago.Entity.PagoDetalle; // Importa la entidad PagoDetalle
-import com.example.mspago.feign.ProductoFeign; // Importa el Feign para productos
-import com.example.mspago.feign.ClienteFeign; // Importa el Feign para clientes
-import com.example.mspago.Repository.PagoRepository; // Importa el repositorio de Pago
-import com.example.mspago.Service.PagoService; // Importa el servicio de Pago
+import com.example.mspago.dto.PagoRequestDto;
+import com.example.mspago.dto.PagoResponseDto;
+import com.example.mspago.dto.PedidoDto;
+import com.example.mspago.Entity.Pago;
+import com.example.mspago.feign.PedidoFeign;
+import com.example.mspago.Repository.PagoRepository;
+import com.example.mspago.Service.PagoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class PagoServiceImpl implements PagoService {
@@ -21,56 +17,30 @@ public class PagoServiceImpl implements PagoService {
     private PagoRepository pagoRepository;
 
     @Autowired
-    private ProductoFeign productoFeign;
-
-    @Autowired
-    private ClienteFeign clienteFeign;
+    private PedidoFeign pedidoFeign;
 
     @Override
-    public List<Pago> list() {
-        return pagoRepository.findAll();
-    }
+    public PagoResponseDto procesarPago(PagoRequestDto pagoRequest) {
+        // 1. Obtener los detalles del pedido desde el microservicio de pedidos
+        PedidoDto pedido = pedidoFeign.getPedidoById(pagoRequest.getPedidoId());
+        if (pedido == null || !"PENDIENTE".equalsIgnoreCase(pedido.getStatus())) {
+            return new PagoResponseDto(null, "FALLIDO", "El pedido no está disponible para pago.", null, null);
 
-    @Override
-    public Pago save(Pago pago) {
-        return pagoRepository.save(pago);
-    }
-
-    @Override
-    public Optional<Pago> findById(Integer id) {
-        Optional<Pago> pagoOptional = pagoRepository.findById(id);
-
-        // Verifica si el Optional contiene un valor
-        if (pagoOptional.isPresent()) {
-            Pago pago = pagoOptional.get();
-
-            // Obtener cliente mediante el cliente Feign
-            ClienteDto clienteDto = clienteFeign.getById(pago.getClienteId()).getBody();
-            pago.setClienteDto(clienteDto);
-
-            // Recorre los detalles del pago solo si el pago existe
-            for (PagoDetalle detallePago : pago.getPagoDetalle()) {
-                // Obtiene el producto asociado al detalle del pago y lo establece
-                ProductoDto productoDto = productoFeign.getById(detallePago.getProductoId()).getBody();
-                detallePago.setProductoDto(productoDto);
-            }
-
-            // Retorna el Optional con el pago modificado
-            return Optional.of(pago);
-        } else {
-            // Maneja el caso en que el pago no se encuentra, por ejemplo:
-            // Lanzar una excepción personalizada o retornar un Optional vacío
-            return Optional.empty();
         }
-    }
 
-    @Override
-    public void delete(Integer id) {
-        pagoRepository.deleteById(id);
-    }
+        // 2. Registrar el pago
+        Pago pago = new Pago();
+        pago.setPedidoId(pedido.getId());
+        pago.setMonto(pedido.getTotal_price()); // Monto tomado directamente del pedido
+        pago.setMetodoPago(pagoRequest.getMetodoPago());
+        pago.setEstado("COMPLETADO");
+        pagoRepository.save(pago);
 
-    @Override
-    public Pago update(Pago pago) {
-        return pagoRepository.save(pago);
+        // 3. Actualizar el estado del pedido a "FINALIZADO"
+        pedidoFeign.actualizarEstadoPedido(pedido.getId(), "FINALIZADO");
+
+        return new PagoResponseDto(pago.getId(), "COMPLETADO", "Pago realizado con éxito.", pago.getMonto(), pedido.getId());
+
     }
 }
+

@@ -106,8 +106,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
-
-
     @Override
     public Optional<Order> findById(Integer id) {
         // Obtener el pedido por ID
@@ -227,5 +225,11 @@ public class OrderServiceImpl implements OrderService {
         }
 
         return updatedOrder;
+    }
+
+    public void actualizarEstado(Integer id, String status) {
+        Order order = orderRepository.findById(id).orElseThrow(() -> new RuntimeException("Pedido no encontrado"));
+        order.setStatus(status);
+        orderRepository.save(order);
     }
 }

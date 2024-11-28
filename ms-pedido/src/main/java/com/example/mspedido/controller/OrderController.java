@@ -170,4 +170,8 @@ public class OrderController {
         orderService.delete(id);
         return ResponseEntity.ok(orderService.list());
     }
+    @PutMapping("/{id}/status")
+    public void actualizarEstadoPedido(@PathVariable("id") Integer id, @RequestParam("status") String status) {
+        orderService.actualizarEstado(id, status);
+    }
 }

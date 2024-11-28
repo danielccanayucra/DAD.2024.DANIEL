@@ -15,4 +15,6 @@ public interface OrderService {
     public void delete(Integer id);
 
     public Order update(Order order);
+
+    public void actualizarEstado(Integer id,String status);
 }

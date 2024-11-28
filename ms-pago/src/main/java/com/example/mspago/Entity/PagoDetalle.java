@@ -1,6 +1,6 @@
 package com.example.mspago.Entity;
 
-import com.example.mspago.dto.ProductoDto; // Importa el DTO de Producto
+import com.example.mspago.dto.PedidoDto; // Importa el DTO de Producto
 import jakarta.persistence.*; // Importa anotaciones de JPA
 import lombok.Data; // Importa la anotación de Lombok para generar automáticamente getters y setters
 
@@ -28,7 +28,7 @@ public class PagoDetalle {
     private Integer productoId; // ID del producto relacionado
 
     @Transient // Indica que este campo no se persiste en la base de datos
-    private ProductoDto productoDto; // Objeto Producto, no persistido en la base de datos
+    private PedidoDto productoDto; // Objeto Producto, no persistido en la base de datos
 
     // Constructor por defecto que inicializa precio y cantidad a 0
     public PagoDetalle() {
