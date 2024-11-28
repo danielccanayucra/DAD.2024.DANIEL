@@ -31,11 +31,15 @@ spring:
 
 
       routes:
-        - id: ms-catalogo-service
+        - id: ms-catalogo-category
           uri: lb://ms-catalogo-service
           predicates:
             - Path=/category/**
-            #- Path=/producto/**
+
+        - id: ms-catalogo-producto
+          uri: lb://ms-catalogo-service
+          predicates:
+            - Path=/producto/**
 
         - id: ms-auth-service
           uri: lb://ms-auth-service
