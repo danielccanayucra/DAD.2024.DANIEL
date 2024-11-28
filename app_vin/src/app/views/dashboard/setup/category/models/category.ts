@@ -1,7 +1,7 @@
 export class Category {
 
     id?: number;
-    name?: string;
+    nombre?: string;
     descripcion?: string;
     code?: string;
 }

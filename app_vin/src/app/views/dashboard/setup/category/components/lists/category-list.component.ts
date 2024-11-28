@@ -52,10 +52,10 @@ import { MatDialog } from '@angular/material/dialog';
                                     {{ i }}
                                 </td>
                                 <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.name }}
+                                    {{ r.nombre }}
                                 </td>
                                 <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.description }}
+                                    {{ r.descripcion }}
                                 </td>
                                 <td class="w-2/6 p-2  text-start border-b text-sm">
                                     {{ r.code }}

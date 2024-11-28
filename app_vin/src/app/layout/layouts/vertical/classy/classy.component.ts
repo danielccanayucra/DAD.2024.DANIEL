@@ -171,7 +171,7 @@ export class ClassyLayoutComponent implements OnInit, OnDestroy {
                         title: 'Inventario',
                         type: 'basic',
                         icon: 'heroicons_outline:clipboard',
-                        link: '/homeScreen/setup/client',
+                        link: '/homeScreen/setup/inventario',
                     },
                     {
                         id: 'Setuppedido',

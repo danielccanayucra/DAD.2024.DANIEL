@@ -88,7 +88,7 @@ export class CategoryEditComponent implements OnInit {
 
     if (this.category) {
         console.log(this.category);
-      this.categoryForm.patchValue(this.category);
+      //this.categoryForm.patchValue(this.category);
     }
   }
 

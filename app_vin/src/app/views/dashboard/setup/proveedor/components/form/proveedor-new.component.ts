@@ -47,8 +47,8 @@ import { MatInputModule } from '@angular/material/input';
                     <input matInput formControlName="nombre" />
                 </mat-form-field>
                 <mat-form-field>
-                    <mat-label>contacto</mat-label>
-                    <input matInput formControlName="contacto" />
+                    <mat-label>RUC</mat-label>
+                    <input matInput formControlName="ruc" />
                 </mat-form-field>
                 <mat-form-field>
                     <mat-label>direccion</mat-label>

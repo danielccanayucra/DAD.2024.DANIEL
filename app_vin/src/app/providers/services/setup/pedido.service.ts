@@ -6,7 +6,7 @@ import {Observable} from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class PedidoService extends EntityDataService<any> {
     constructor(protected override httpClient: HttpClient) {
-        super(httpClient, END_POINTS.setup.client);
+        super(httpClient, END_POINTS.setup.pedido);
     }
 
 

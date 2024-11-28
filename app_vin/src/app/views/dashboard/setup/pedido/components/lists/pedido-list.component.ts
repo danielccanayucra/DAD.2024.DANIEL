@@ -27,67 +27,68 @@ import { MatDialog } from '@angular/material/dialog';
                 <div class="p-2 overflow-scroll px-0">
                     <table class="w-full table-fixed">
                         <thead class="bg-primary-600 text-white">
-                            <tr>
-                                <th class="w-1/6 table-head text-center px-5 border-r">#</th>
-                                <th class="w-2/6 table-header text-center px-5 border-r">
-                                    Serie
-                                </th>
-                                <th class="w-1/6 table-header text-center border-r">
-                                    Numero
-                                </th>
-                                <th class="w-1/6 table-header text-center border-r">
-                                    descripcion
-                                </th>
-                                <th class="w-1/6 table-header text-center border-r">
-                                    clienteID
-                                </th>
-                                <th class="w-2/6 table-header text-center">
-                                    Acciones
-                                </th>
-                            </tr>
+                        <tr>
+                            <th class="w-1/6 table-head text-center px-5 border-r">#</th>
+                            <th class="w-2/6 table-header text-center px-5 border-r">Serie</th>
+                            <th class="w-1/6 table-header text-center border-r">Número</th>
+                            <th class="w-1/6 table-header text-center border-r">Descripción</th>
+                            <th class="w-1/6 table-header text-center border-r">Cliente ID</th>
+                            <th class="w-2/6 table-header text-center">Acciones</th>
+                        </tr>
                         </thead>
-                        <tbody
-                            class="bg-white"
-                            *ngFor="let r of pedidos; let i = index">
-                            <tr class="hover:bg-gray-100">
-                                <td class="w-1/6 p-2 text-center border-b">
-                                    {{ i }}
-                                </td>
-                                <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.serie }}
-                                </td>
-                                <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.numero }}
-                                </td>
-                                <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.descripcion }}
-                                </td>
-                                <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r. }}
-                                </td>
-                                <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.estado }}
-                                </td>
-                                <td class="w-2/6 p-2 text-center border-b text-sm">
-                                    <div class="flex justify-center space-x-3">
-                                        <mat-icon class="text-amber-400 hover:text-amber-500 cursor-pointer"
-                                            (click)="goEdit(r.id)">edit</mat-icon>
-
-                                        <mat-icon class="text-rose-500 hover:text-rose-600 cursor-pointer"
-                                            (click)="goDelete(r.id)">delete_sweep</mat-icon>
-                                    </div>
-                                </td>
-                            </tr>
+                        <tbody class="bg-white" *ngFor="let r of pedidos; let i = index">
+                        <tr class="hover:bg-gray-100">
+                            <td class="w-1/6 p-2 text-center border-b">{{ i + 1 }}</td>
+                            <td class="w-2/6 p-2 text-start border-b text-sm">{{ r.serie }}</td>
+                            <td class="w-2/6 p-2 text-start border-b text-sm">{{ r.numero }}</td>
+                            <td class="w-2/6 p-2 text-start border-b text-sm">{{ r.descripcion }}</td>
+                            <td class="w-2/6 p-2 text-start border-b text-sm">{{ r.clienteId }}</td>
+                            <td class="w-2/6 p-2 text-center border-b text-sm">
+                                <div class="flex justify-center space-x-3">
+                                    <mat-icon class="text-amber-400 hover:text-amber-500 cursor-pointer"
+                                              (click)="goEdit(r.id)">edit</mat-icon>
+                                    <mat-icon class="text-rose-500 hover:text-rose-600 cursor-pointer"
+                                              (click)="goDelete(r.id)">delete_sweep</mat-icon>
+                                    <mat-icon class="text-blue-500 hover:text-blue-600 cursor-pointer"
+                                              (click)="toggleDetalle(i)">list_alt</mat-icon>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- Tabla secundaria para los detalles del pedido -->
+                        <tr *ngIf="isDetalleVisible[i]">
+                            <td colspan="6" class="p-2 bg-gray-100">
+                                <table class="w-full table-fixed border">
+                                    <thead class="bg-gray-200">
+                                    <tr>
+                                        <th class="w-1/6 text-center px-5 border-r">#</th>
+                                        <th class="w-2/6 text-center px-5 border-r">Cantidad</th>
+                                        <th class="w-2/6 text-center px-5 border-r">Precio</th>
+                                        <th class="w-2/6 text-center px-5 border-r">Producto ID</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr *ngFor="let detalle of r.pedidodetalle; let j = index" class="hover:bg-white">
+                                        <td class="w-1/6 p-2 text-center border-b">{{ j + 1 }}</td>
+                                        <td class="w-2/6 p-2 text-center border-b">{{ detalle.cantidad }}</td>
+                                        <td class="w-2/6 p-2 text-center border-b">{{ detalle.precio }}</td>
+                                        <td class="w-2/6 p-2 text-center border-b">{{ detalle.productoId }}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
     `,
 })
 export class PedidoListComponent implements OnInit {
     abcForms: any;
     @Input() pedidos: Pedido[] = [];
+    isDetalleVisible: boolean[] = [];
     @Output() eventNew = new EventEmitter<boolean>();
     @Output() eventEdit = new EventEmitter<number>();
     @Output() eventDelete = new EventEmitter<number>();
@@ -96,6 +97,12 @@ export class PedidoListComponent implements OnInit {
 
     ngOnInit() {
         this.abcForms = abcForms;
+    // Inicializa el estado del despliegue de detalles
+    this.isDetalleVisible = new Array(this.pedidos.length).fill(false);
+    }
+
+    toggleDetalle(index: number): void {
+        this.isDetalleVisible[index] = !this.isDetalleVisible[index];
     }
 
     public goNew(): void {

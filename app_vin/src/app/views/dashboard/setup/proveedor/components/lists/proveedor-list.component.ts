@@ -33,13 +33,13 @@ import { MatDialog } from '@angular/material/dialog';
                                     Nombre
                                 </th>
                                 <th class="w-1/6 table-header text-center border-r">
-                                    contacto
+                                    RUC
                                 </th>
                                 <th class="w-1/6 table-header text-center border-r">
                                     direccion
                                 </th>
                                 <th class="w-1/6 table-header text-center border-r">
-                                    telefono
+                                    Teléfono
                                 </th>
                                 <th class="w-1/6 table-header text-center border-r">
                                     correo
@@ -60,7 +60,7 @@ import { MatDialog } from '@angular/material/dialog';
                                     {{ r.nombre }}
                                 </td>
                                 <td class="w-2/6 p-2  text-start border-b text-sm">
-                                    {{ r.contacto }}
+                                    {{ r.ruc }}
                                 </td>
                                 <td class="w-2/6 p-2  text-start border-b text-sm">
                                     {{ r.direccion }}
