@@ -4,4 +4,4 @@ spring:
   profiles:
     active: development
   config:
-    import: optional:configserver:http://root:123456@localhost:7070r-ui.path=/doc/swagger-ui.html
+    import: optional:configserver:http://root:123456@localhost:7070
