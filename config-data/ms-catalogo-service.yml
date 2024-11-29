@@ -13,6 +13,6 @@ spring:
     show_sql: true
   datasource:
     driverClassName: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/ms_catalog
+    url: jdbc:mysql://localhost:3306/ms-catalog
     username: root
     password:
