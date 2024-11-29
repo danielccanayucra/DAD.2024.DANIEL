@@ -13,7 +13,7 @@ spring:
         git:
           uri: https://github.com/danielccanayucra/Proyecto-Integrador-2024-2-DAD.git # ruta del repositorio git
           searchPaths: config-data
-          default-label:
+          default-label: practica
 
 
 
