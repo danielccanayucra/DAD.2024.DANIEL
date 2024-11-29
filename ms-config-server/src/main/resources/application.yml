@@ -1,0 +1,19 @@
+server:
+  port: 7070
+
+
+
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/danielccanayucra/Proyecto-Integrador-2024-2-DAD.git # ruta del repositorio git
+          searchPaths: config-data
+          default-label:
+
+
+
